@@ -6,7 +6,8 @@ const config = {
   description: "Auto chat with loop using SIM API",
   usage: "bot hi | bot <your message>",
   cooldown: 3,
-  permissions: [0, 1, 2],
+  permissions: [0],
+  nixprefix: true,
   credits: "LIKHON AHMED"
 };
 
