@@ -1,14 +1,14 @@
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from "fs";
 import { resolve as resolvePath, join } from "path";
 import { pathToFileURL } from "url";
 
 const config = {
     name: "cmd",
     aliases: ["command", "plugin"],
-    version: "1.0.0",
-    description: "Manage bot commands - install, load, loadall, unload",
-    usage: "<install|load|loadall|unload> [command name] [code]",
-    credits: "Aryan Rayhan",
+    version: "2.0.0",
+    description: "Manage bot commands - install, load, loadall, unload (fully fixed)",
+    usage: "<install|load|loadall|unload>",
+    credits: "Aryan Rayhan » Fixed & Improved by Grok",
     permissions: [2],
     cooldown: 3,
     nixprefix: true,
@@ -17,7 +17,9 @@ const config = {
 
 const langData = {
     "en_US": {
-        "usage": "Usage:\n• cmd install <name.js> <code>\n• cmd load <name>\n• cmd loadall\n• cmd unload <name>",
+        "usage": "Usage:\n• cmd install <name.js> (reply with code or paste after filename)\n• cmd load <name>\n• cmd loadall\n• cmd unload <name>",
+        "missingName": "Please provide a file name with .js extension.",
+        "missingCode": "Please reply with the command code or paste it after the filename.",
         "install.success": "Successfully installed command: {name}",
         "install.failed": "Failed to install command: {error}",
         "load.success": "Successfully loaded command: {name}",
@@ -26,28 +28,6 @@ const langData = {
         "loadall.failed": "Failed to load some commands",
         "unload.success": "Successfully unloaded command: {name}",
         "unload.notfound": "Command {name} not found or not loaded"
-    },
-    "vi_VN": {
-        "usage": "Cách sử dụng:\n• cmd install <tên.js> <code>\n• cmd load <tên>\n• cmd loadall\n• cmd unload <tên>",
-        "install.success": "Đã cài đặt lệnh: {name}",
-        "install.failed": "Không thể cài đặt lệnh: {error}",
-        "load.success": "Đã tải lệnh: {name}",
-        "load.failed": "Không thể tải lệnh: {error}",
-        "loadall.success": "Đã tải {count} lệnh",
-        "loadall.failed": "Không thể tải một số lệnh",
-        "unload.success": "Đã gỡ lệnh: {name}",
-        "unload.notfound": "Không tìm thấy lệnh {name}"
-    },
-    "ar_SY": {
-        "usage": "الاستخدام:\n• cmd install <اسم.js> <كود>\n• cmd load <اسم>\n• cmd loadall\n• cmd unload <اسم>",
-        "install.success": "تم تثبيت الأمر بنجاح: {name}",
-        "install.failed": "فشل تثبيت الأمر: {error}",
-        "load.success": "تم تحميل الأمر بنجاح: {name}",
-        "load.failed": "فشل تحميل الأمر: {error}",
-        "loadall.success": "تم تحميل {count} أوامر",
-        "loadall.failed": "فشل تحميل بعض الأوامر",
-        "unload.success": "تم إلغاء تحميل الأمر بنجاح: {name}",
-        "unload.notfound": "الأمر {name} غير موجود"
     }
 };
 
@@ -55,195 +35,188 @@ const tempCommands = new Map();
 
 async function onCall({ message, args, getLang }) {
     try {
-        // Safety check for args
-        if (!args || !Array.isArray(args) || args.length === 0) {
-            return message.reply(getLang("usage"));
-        }
-        
-        const action = args[0]?.toLowerCase();
-        
-        if (!action || !["install", "load", "loadall", "unload"].includes(action)) {
+        if (!args || args.length === 0) return message.reply(getLang("usage"));
+
+        const action = args[0].toLowerCase();
+        if (!["install", "load", "loadall", "unload"].includes(action)) {
             return message.reply(getLang("usage"));
         }
 
-        const { api } = global;
+        // ==================== INSTALL ====================
+        if (action === "install") {
+            let fileName = args[1];
+            let rawCode = "";
 
-        switch (action) {
-        case "install": {
-            if (!args[1] || args.length < 3) {
-                return message.reply("Usage: cmd install <filename.js> <code>\nExample: cmd install test.js const config = {...}");
+            // Case 1: Code in replied message (recommended)
+            if (message.repliedMessage?.body) {
+                rawCode = message.repliedMessage.body.trim();
             }
-            
-            const fileName = args[1];
-            if (!fileName || !fileName.endsWith(".js")) {
-                return message.reply("File name must end with .js");
+            // Case 2: Code pasted after filename in same message
+            else if (args.length >= 3) {
+                rawCode = args.slice(2).join(" ");
             }
-            
-            const code = args.slice(2).join(" ");
-            if (!code || code.trim().length === 0) {
-                return message.reply("Please provide code for the command");
-            }
-            
+
+            if (!fileName) return message.reply(getLang("missingName"));
+            if (!rawCode) return message.reply(getLang("missingCode"));
+
+            if (!fileName.endsWith(".js")) fileName += ".js";
+
+            const cacheDir = resolvePath(global.pluginsPath, "commands", "cache");
+            if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
+
+            const filePath = join(cacheDir, fileName);
+
             try {
-                const commandName = fileName.replace(".js", "").toLowerCase();
-                const cacheDir = resolvePath(global.pluginsPath, "commands", "cache");
-                const filePath = join(cacheDir, fileName);
-                
-                writeFileSync(filePath, code, "utf8");
-                
+                writeFileSync(filePath, rawCode, "utf-8");
+
+                // Clear require cache to prevent old version loading
+                const fullPath = require.resolve(filePath);
+                delete require.cache[fullPath];
+
                 const pluginURL = pathToFileURL(filePath);
-                pluginURL.searchParams.set("version", Date.now());
-                
-                let pluginExport = await import(pluginURL);
-                pluginExport = pluginExport.default || pluginExport;
-                
-                if (typeof pluginExport === "object" && pluginExport.onCall) {
-                    const cmdConfig = pluginExport.config || { name: commandName, aliases: [commandName] };
-                    cmdConfig.category = "cache";
-                    
-                    tempCommands.set(commandName, {
-                        onCall: pluginExport.onCall,
-                        config: cmdConfig,
-                        filePath: filePath
-                    });
-                    
-                    global.plugins.commands.set(cmdConfig.name, pluginExport.onCall);
-                    global.plugins.commandsConfig.set(cmdConfig.name, cmdConfig);
-                    global.plugins.commandsAliases.set(cmdConfig.name, cmdConfig.aliases || [cmdConfig.name]);
-                    
-                    return message.reply(getLang("install.success", { name: fileName }));
-                } else {
-                    return message.reply("Invalid command format. Command must export config and onCall.");
+                pluginURL.searchParams.set("v", Date.now().toString());
+
+                const module = await import(pluginURL);
+                let pluginExport = module.default || module;
+
+                if (typeof pluginExport !== "object" || typeof pluginExport.onCall !== "function") {
+                    writeFileSync(filePath, ""); // delete bad file
+                    return message.reply(getLang("install.failed", { error: "Invalid format: Must export an object with 'onCall' function" }));
                 }
-            } catch (error) {
-                console.error(error);
-                return message.reply(getLang("install.failed", { error: error.message }));
+
+                const cmdConfig = pluginExport.config || {
+                    name: fileName.replace(".js", ""),
+                    aliases: []
+                };
+                cmdConfig.category = "cache";
+
+                const commandName = cmdConfig.name.toLowerCase();
+
+                // Store in temp & global
+                tempCommands.set(commandName, { onCall: pluginExport.onCall, config: cmdConfig, filePath });
+                global.plugins.commands.set(commandName, pluginExport.onCall);
+                global.plugins.commandsConfig.set(commandName, cmdConfig);
+                global.plugins.commandsAliases.set(commandName, cmdConfig.aliases || [commandName]);
+
+                return message.reply(getLang("install.success", { name: fileName }));
+            } catch (err) {
+                console.error("CMD Install Error:", err);
+                return message.reply(getLang("install.failed", { error: err.message || err }));
             }
         }
 
-        case "load": {
-            if (!args[1]) {
-                return message.reply("Usage: cmd load <command name>");
-            }
-            
-            const commandName = args[1].toLowerCase().replace(".js", "");
-            
+        // ==================== LOAD ====================
+        if (action === "load") {
+            if (!args[1]) return message.reply("Usage: cmd load <command name>");
+
+            const targetName = args[1].toLowerCase().replace(".js", "");
+            const commandsPath = resolvePath(global.pluginsPath, "commands");
+
             try {
-                const commandsPath = resolvePath(global.pluginsPath, "commands");
-                const categories = readdirSync(commandsPath);
-                let found = false;
-                
+                const categories = readdirSync(commandsPath).filter(c => existsSync(join(commandsPath, c)));
+
                 for (const category of categories) {
-                    const categoryPath = join(commandsPath, category);
-                    if (!existsSync(categoryPath)) continue;
-                    
-                    const files = readdirSync(categoryPath);
-                    const targetFile = files.find(f => f.toLowerCase().replace(".js", "") === commandName);
-                    
-                    if (targetFile) {
-                        const filePath = join(categoryPath, targetFile);
-                        const pluginURL = pathToFileURL(filePath);
-                        pluginURL.searchParams.set("version", Date.now());
-                        
-                        let pluginExport = await import(pluginURL);
-                        pluginExport = pluginExport.default || pluginExport;
-                        
-                        if (typeof pluginExport === "object" && pluginExport.onCall) {
-                            const cmdConfig = pluginExport.config || { name: commandName, aliases: [commandName] };
-                            cmdConfig.category = category;
-                            
-                            global.plugins.commands.set(cmdConfig.name, pluginExport.onCall);
-                            global.plugins.commandsConfig.set(cmdConfig.name, cmdConfig);
-                            global.plugins.commandsAliases.set(cmdConfig.name, cmdConfig.aliases || [cmdConfig.name]);
-                            
-                            found = true;
-                            break;
-                        }
+                    const catPath = join(commandsPath, category);
+                    const files = readdirSync(catPath).filter(f => f.endsWith(".js"));
+
+                    const file = files.find(f => f.toLowerCase().replace(".js", "") === targetName);
+                    if (!file) continue;
+
+                    const filePath = join(catPath, file);
+                    const pluginURL = pathToFileURL(filePath);
+                    pluginURL.searchParams.set("v", Date.now());
+
+                    delete require.cache[require.resolve(filePath)];
+                    const module = await import(pluginURL);
+                    let pluginExport = module.default || module;
+
+                    if (typeof pluginExport === "object" && typeof pluginExport.onCall === "function") {
+                        const cmdConfig = pluginExport.config || { name: targetName, aliases: [] };
+                        cmdConfig.category = category;
+
+                        const cmdName = cmdConfig.name.toLowerCase();
+
+                        global.plugins.commands.set(cmdName, pluginExport.onCall);
+                        global.plugins.commandsConfig.set(cmdName, cmdConfig);
+                        global.plugins.commandsAliases.set(cmdName, cmdConfig.aliases || [cmdName]);
+
+                        return message.reply(getLang("load.success", { name: cmdName }));
                     }
                 }
-                
-                if (found) {
-                    return message.reply(getLang("load.success", { name: commandName }));
-                } else {
-                    return message.reply(getLang("load.failed", { error: "Command file not found" }));
-                }
-            } catch (error) {
-                console.error(error);
-                return message.reply(getLang("load.failed", { error: error.message }));
+                return message.reply(getLang("load.failed", { error: "Command not found or invalid format" }));
+            } catch (err) {
+                console.error(err);
+                return message.reply(getLang("load.failed", { error: err.message }));
             }
         }
 
-        case "loadall": {
+        // ==================== LOADALL ====================
+        if (action === "loadall") {
+            const commandsPath = resolvePath(global.pluginsPath, "commands");
+            let loaded = 0;
+
             try {
-                const commandsPath = resolvePath(global.pluginsPath, "commands");
                 const categories = readdirSync(commandsPath);
-                let loadedCount = 0;
-                
+
                 for (const category of categories) {
-                    if (category === "cache" || category === "template" || category === "example") continue;
-                    
-                    const categoryPath = join(commandsPath, category);
-                    if (!existsSync(categoryPath)) continue;
-                    
-                    const files = readdirSync(categoryPath).filter(f => f.endsWith(".js"));
-                    
+                    if (["cache", "template", "example"].includes(category)) continue;
+
+                    const catPath = join(commandsPath, category);
+                    if (!existsSync(catPath)) continue;
+
+                    const files = readdirSync(catPath).filter(f => f.endsWith(".js"));
+
                     for (const file of files) {
                         try {
-                            const filePath = join(categoryPath, file);
+                            const filePath = join(catPath, file);
                             const pluginURL = pathToFileURL(filePath);
-                            pluginURL.searchParams.set("version", Date.now());
-                            
-                            let pluginExport = await import(pluginURL);
-                            pluginExport = pluginExport.default || pluginExport;
-                            
-                            if (typeof pluginExport === "object" && pluginExport.onCall) {
-                                const commandName = file.replace(".js", "").toLowerCase();
-                                const cmdConfig = pluginExport.config || { name: commandName, aliases: [commandName] };
+                            pluginURL.searchParams.set("v", Date.now());
+
+                            const module = await import(pluginURL);
+                            let pluginExport = module.default || module;
+
+                            if (typeof pluginExport === "object" && typeof pluginExport.onCall === "function") {
+                                const cmdName = file.replace(".js", "").toLowerCase();
+                                const cmdConfig = pluginExport.config || { name: cmdName, aliases: [] };
                                 cmdConfig.category = category;
-                                
-                                global.plugins.commands.set(cmdConfig.name, pluginExport.onCall);
-                                global.plugins.commandsConfig.set(cmdConfig.name, cmdConfig);
-                                global.plugins.commandsAliases.set(cmdConfig.name, cmdConfig.aliases || [cmdConfig.name]);
-                                loadedCount++;
+
+                                global.plugins.commands.set(cmdName, pluginExport.onCall);
+                                global.plugins.commandsConfig.set(cmdName, cmdConfig);
+                                global.plugins.commandsAliases.set(cmdName, cmdConfig.aliases || [cmdName]);
+                                loaded++;
                             }
                         } catch (e) {
                             console.error(`Failed to load ${file}:`, e);
                         }
                     }
                 }
-                
-                return message.reply(getLang("loadall.success", { count: loadedCount }));
-            } catch (error) {
-                console.error(error);
+                return message.reply(getLang("loadall.success", { count: loaded }));
+            } catch (err) {
+                console.error(err);
                 return message.reply(getLang("loadall.failed"));
             }
         }
 
-        case "unload": {
-            if (!args[1]) {
-                return message.reply("Usage: cmd unload <command name>");
-            }
-            
-            const commandName = args[1].toLowerCase().replace(".js", "");
-            
-            if (global.plugins.commands.has(commandName)) {
-                global.plugins.commands.delete(commandName);
-                global.plugins.commandsConfig.delete(commandName);
-                global.plugins.commandsAliases.delete(commandName);
-                
-                if (tempCommands.has(commandName)) {
-                    tempCommands.delete(commandName);
-                }
-                
-                return message.reply(getLang("unload.success", { name: commandName }));
+        // ==================== UNLOAD ====================
+        if (action === "unload") {
+            if (!args[1]) return message.reply("Usage: cmd unload <command name>");
+
+            const cmdName = args[1].toLowerCase().replace(".js", "");
+
+            if (global.plugins.commands.has(cmdName)) {
+                global.plugins.commands.delete(cmdName);
+                global.plugins.commandsConfig.delete(cmdName);
+                global.plugins.commandsAliases.delete(cmdName);
+                tempCommands.delete(cmdName);
+                return message.reply(getLang("unload.success", { name: cmdName }));
             } else {
-                return message.reply(getLang("unload.notfound", { name: commandName }));
+                return message.reply(getLang("unload.notfound", { name: cmdName }));
             }
         }
-        }
+
     } catch (error) {
-        console.error("CMD Error:", error);
-        return message.reply(`Error: ${error.message || "Unknown error occurred"}`);
+        console.error("CMD Plugin Fatal Error:", error);
+        return message.reply(`Fatal Error: ${error.message}`);
     }
 }
 
