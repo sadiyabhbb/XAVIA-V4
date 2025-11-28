@@ -53,5 +53,5 @@ npm install && npm start
 ## Authors
 
 • **RFS-ADRENO** 
-modified by **Aryan Rayhan**
+modified by **Aryan Rayhan** & *LIKHON AHMED*
 
