@@ -5,7 +5,7 @@ const config = {
     cooldown: 3,
     permissions: [0, 1, 2],
     credits: "XaviaTeam",
-    nsfw: true,
+    nsfw: false,
     nixprefix: true,
     vip: false
 }
