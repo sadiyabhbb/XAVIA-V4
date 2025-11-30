@@ -24,7 +24,7 @@ const langData = {
     }
 };
 
-// GET BASE API URL
+
 async function baseApiUrl() {
     try {
         const base = await axios.get(
@@ -42,14 +42,14 @@ async function onCall({ message, args, getLang }) {
     let url = args[0] || messageReply?.body;
     if (!url) return message.reply(getLang("missingUrl"));
 
-    // Send downloading reaction
+    
     message.react("⏳");
 
     try {
         const apiBase = await baseApiUrl();
         if (!apiBase) throw new Error("API source offline.");
 
-        // Hit ALDDL ENDPOINT
+        
         const { data } = await axios.get(
             `${apiBase}/alldl?url=${encodeURIComponent(url)}`
         );
@@ -57,30 +57,30 @@ async function onCall({ message, args, getLang }) {
         const videoUrl = data?.result;
         if (!videoUrl) throw new Error("Invalid download URL.");
 
-        // Cache path
+        
         const cacheDir = path.join(process.cwd(), "cache");
         const filePath = path.join(cacheDir, "alldl_vid.mp4");
 
-        // Ensure /cache exists
+       
         if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
 
-        // Download video
+        
         const videoData = (
             await axios.get(videoUrl, { responseType: "arraybuffer" })
         ).data;
 
         fs.writeFileSync(filePath, Buffer.from(videoData));
 
-        // Shorten URL if available
+   
         let short = videoUrl;
         try {
             short = await global.utils.shortenURL(videoUrl);
         } catch {}
 
-        // Send success reaction
+        
         message.react("✅");
 
-        // Send video
+        
         await message.reply({
             body: `${getLang("success")}\n🔗 Link: ${short}`,
             attachment: fs.createReadStream(filePath)
@@ -88,7 +88,7 @@ async function onCall({ message, args, getLang }) {
 
         fs.unlinkSync(filePath);
 
-        // Imgur support
+        
         if (url.startsWith("https://i.imgur.com")) {
             const ext = url.substring(url.lastIndexOf("."));
             const imgName = path.join(cacheDir, `imgur${ext}`);
