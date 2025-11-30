@@ -24,63 +24,41 @@ const langData = {
     }
 };
 
-
-async function baseApiUrl() {
-    try {
-        const base = await axios.get(
-            `https://raw.githubusercontent.com/Mostakim0978/D1PT0/refs/heads/main/baseApiUrl.json`
-        );
-        return base.data.api;
-    } catch {
-        return null;
-    }
-}
-
 async function onCall({ message, args, getLang }) {
-    const { threadID, messageID, messageReply } = message;
+    const { messageReply } = message;
 
     let url = args[0] || messageReply?.body;
     if (!url) return message.reply(getLang("missingUrl"));
 
-    
     message.react("⏳");
 
     try {
-        const apiBase = await baseApiUrl();
-        if (!apiBase) throw new Error("API source offline.");
+        // NEW FIXED API
+        const apiUrl = `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`;
 
-        
-        const { data } = await axios.get(
-            `${apiBase}/alldl?url=${encodeURIComponent(url)}`
-        );
+        const { data } = await axios.get(apiUrl);
 
         const videoUrl = data?.result;
         if (!videoUrl) throw new Error("Invalid download URL.");
 
-        
         const cacheDir = path.join(process.cwd(), "cache");
         const filePath = path.join(cacheDir, "alldl_vid.mp4");
 
-       
         if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
 
-        
         const videoData = (
             await axios.get(videoUrl, { responseType: "arraybuffer" })
         ).data;
 
         fs.writeFileSync(filePath, Buffer.from(videoData));
 
-   
         let short = videoUrl;
         try {
             short = await global.utils.shortenURL(videoUrl);
         } catch {}
 
-        
         message.react("✅");
 
-        
         await message.reply({
             body: `${getLang("success")}\n🔗 Link: ${short}`,
             attachment: fs.createReadStream(filePath)
@@ -88,7 +66,7 @@ async function onCall({ message, args, getLang }) {
 
         fs.unlinkSync(filePath);
 
-        
+        // imgur image handling
         if (url.startsWith("https://i.imgur.com")) {
             const ext = url.substring(url.lastIndexOf("."));
             const imgName = path.join(cacheDir, `imgur${ext}`);
