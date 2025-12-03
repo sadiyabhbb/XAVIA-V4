@@ -42,10 +42,20 @@ export async function onCall({ message, args }) {
 
   if (!askText && replyText) askText = replyText;
 
-  // Sender Full Name ONLY (no "বন্ধু", no fallback)
-  const fullName = message.senderName || "";
+  // ===== FIX: FULL NAME 100% Ensure =====
+  let fullName = message.senderName;
 
-  // === Perfect Mention Function ===
+  // যদি senderName না আসে → fallback from message.senderID
+  if (!fullName || fullName.trim() === "") {
+    try {
+      const info = await global.api.getUserInfo(message.senderID);
+      fullName = info[message.senderID]?.name || "User";
+    } catch {
+      fullName = "User";
+    }
+  }
+
+  // === PERFECT Mention ===
   const replyWithMention = (text) => {
     const bodyText = `${fullName}, ${text}`;
 
@@ -60,37 +70,26 @@ export async function onCall({ message, args }) {
     });
   };
 
-  // Detect bot tag
+  // Bot tag detection
   const isBotTagged =
     message?.mentions && Object.keys(message.mentions).includes(global.botID);
 
-  // ==== BOT TAG REPLY ====
   if (isBotTagged) {
     const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(
-      msg => typeof msg === "string" && !msg.startsWith("http")
-    );
-
-    if (!filtered.length) return message.reply("⚠️ No valid messages available.");
+    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
     const random = filtered[Math.floor(Math.random() * filtered.length)];
-
     return replyWithMention(random);
   }
 
-  // ==== HI or Empty ====
+  // HI or empty
   if (askText.toLowerCase() === "hi" || askText === "") {
     const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(
-      msg => typeof msg === "string" && !msg.startsWith("http")
-    );
-
-    if (!filtered.length) return message.reply("⚠️ No valid messages available.");
+    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
     const random = filtered[Math.floor(Math.random() * filtered.length)];
-
     return replyWithMention(random);
   }
 
-  // ==== SIM API ====
+  // SIM API
   try {
     const res = await axios.get(SIM_API_URL, {
       params: { type: "ask", ask: askText }
@@ -99,7 +98,7 @@ export async function onCall({ message, args }) {
     if (res.data?.data?.msg) {
       return replyWithMention(res.data.data.msg);
     }
-  } catch (e) {
+  } catch {
     return message.reply("⚠️ API error. Try again.");
   }
 
