@@ -40,24 +40,36 @@ export async function onCall({ message, args }) {
   const replyText = message?.reply_message?.text?.trim();
   let askText = inputText;
 
-  // ✅ যদি কিছু না লেখে এবং কিছুর উপরে reply করে
+  // যদি reply থাকে এবং input না থাকে
   if (!askText && replyText) {
     askText = replyText;
   }
 
-  // ✅ যদি 'hi' বা 'bot' বা খালি কিছু লিখে
-  if (askText.toLowerCase() === "hi" || askText === "") {
+  // ================= TAG DETECT =================
+  const isBotTagged =
+    message?.mentions && Object.keys(message.mentions).includes(global.botID);
+
+  // যদি কেউ বটকে tag করে → random message
+  if (isBotTagged) {
     const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(msg =>
-      typeof msg === "string" && !msg.startsWith("http")
-    );
+    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
 
     if (!filtered.length) return message.reply("⚠️ No valid messages available.");
     const random = filtered[Math.floor(Math.random() * filtered.length)];
     return message.reply(random);
   }
 
-  // 🔁 SIM API তে পাঠাও
+  // ================= RANDOM HI MSG =================
+  if (askText.toLowerCase() === "hi" || askText === "") {
+    const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
+    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
+
+    if (!filtered.length) return message.reply("⚠️ No valid messages available.");
+    const random = filtered[Math.floor(Math.random() * filtered.length)];
+    return message.reply(random);
+  }
+
+  // ================= SIM API =================
   try {
     const res = await axios.get(SIM_API_URL, {
       params: { type: "ask", ask: askText }
