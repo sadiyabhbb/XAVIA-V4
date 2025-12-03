@@ -1,111 +1,119 @@
-import axios from "axios";
-import fs from "fs";
-
-const config = {
-  name: "bot",
-  description: "Auto chat with loop using SIM API",
-  usage: "bot hi | bot <your message>",
-  cooldown: 3,
-  permissions: [0],
-  nixprefix: true,
-  credits: "LIKHON AHMED"
-};
-
-const LOCAL_CACHE = "./cache/teach.json";
-const SIM_API_URL = "http://65.109.80.126:20392/sim";
-
-function ensureCache() {
-  const defaultData = [
-    "Hello! How can I help you today?",
-    "I'm always here for you!",
-    "What's up? 😊",
-    "Need any help?",
-    "Hi there! I'm your bot buddy.",
-    "Bot is alive 😎",
-    "Ready to respond anytime!",
-    "How’s your day going?"
-  ];
-
-  if (!fs.existsSync("./cache")) fs.mkdirSync("./cache");
-
-  if (!fs.existsSync(LOCAL_CACHE)) {
-    fs.writeFileSync(LOCAL_CACHE, JSON.stringify(defaultData, null, 2), "utf-8");
+[
+  {
+    "key": "datr",
+    "value": "Ow4waSTRwmQa4skbw0IIidsi",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.981Z",
+    "lastAccessed": "2025-12-03T16:25:49.981Z"
+  },
+  {
+    "key": "sb",
+    "value": "Ow4waeYyi-tPKGuuFdUFyBAG",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.982Z",
+    "lastAccessed": "2025-12-03T16:25:49.982Z"
+  },
+  {
+    "key": "m_pixel_ratio",
+    "value": "2.206249952316284",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.982Z",
+    "lastAccessed": "2025-12-03T16:25:49.982Z"
+  },
+  {
+    "key": "wd",
+    "value": "490x1061",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.982Z",
+    "lastAccessed": "2025-12-03T16:25:49.982Z"
+  },
+  {
+    "key": "c_user",
+    "value": "61575115763106",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.983Z",
+    "lastAccessed": "2025-12-03T16:25:49.983Z"
+  },
+  {
+    "key": "xs",
+    "value": "17%3AF8rtlCrondoMmQ%3A2%3A1764757109%3A-1%3A-1",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.983Z",
+    "lastAccessed": "2025-12-03T16:25:49.983Z"
+  },
+  {
+    "key": "locale",
+    "value": "en_US",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.983Z",
+    "lastAccessed": "2025-12-03T16:25:49.984Z"
+  },
+  {
+    "key": "pas",
+    "value": "61575115763106%3AI1yH3akhFJ",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.984Z",
+    "lastAccessed": "2025-12-03T16:25:49.984Z"
+  },
+  {
+    "key": "fr",
+    "value": "0dGWT6LF8WlMf5tvj.AWevl-T4q4lCC_GcVtYUbehihDoyu-R1GngNnGvCi8pIqjfthi0.BpMA47..AAA.0.0.BpMBAp.AWetmf5_qQ7f8OHRJXneIT9WS6U",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.984Z",
+    "lastAccessed": "2025-12-03T16:25:49.984Z"
+  },
+  {
+    "key": "fbl_st",
+    "value": "100630199%3BT%3A29412625",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.984Z",
+    "lastAccessed": "2025-12-03T16:25:49.985Z"
+  },
+  {
+    "key": "ps_l",
+    "value": "0",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.985Z",
+    "lastAccessed": "2025-12-03T16:25:49.985Z"
+  },
+  {
+    "key": "ps_n",
+    "value": "0",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.985Z",
+    "lastAccessed": "2025-12-03T16:25:49.985Z"
+  },
+  {
+    "key": "wl_cbv",
+    "value": "v2%3Bclient_version%3A3005%3Btimestamp%3A1764757548",
+    "domain": "facebook.com",
+    "path": "\/",
+    "hostOnly": false,
+    "creation": "2025-12-03T16:25:49.985Z",
+    "lastAccessed": "2025-12-03T16:25:49.986Z"
   }
-}
-
-export async function onCall({ message, args }) {
-  ensureCache();
-
-  const inputText = args.join(" ").trim();
-  const replyText = message?.reply_message?.text?.trim();
-  let askText = inputText;
-
-  if (!askText && replyText) askText = replyText;
-
-  // ===== FIX: FULL NAME 100% Ensure =====
-  let fullName = message.senderName;
-
-  // যদি senderName না আসে → fallback from message.senderID
-  if (!fullName || fullName.trim() === "") {
-    try {
-      const info = await global.api.getUserInfo(message.senderID);
-      fullName = info[message.senderID]?.name || "User";
-    } catch {
-      fullName = "User";
-    }
-  }
-
-  // === PERFECT Mention ===
-  const replyWithMention = (text) => {
-    const bodyText = `${fullName}, ${text}`;
-
-    return message.reply({
-      body: bodyText,
-      mentions: [
-        {
-          tag: fullName,
-          id: message.senderID
-        }
-      ]
-    });
-  };
-
-  // Bot tag detection
-  const isBotTagged =
-    message?.mentions && Object.keys(message.mentions).includes(global.botID);
-
-  if (isBotTagged) {
-    const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
-    const random = filtered[Math.floor(Math.random() * filtered.length)];
-    return replyWithMention(random);
-  }
-
-  // HI or empty
-  if (askText.toLowerCase() === "hi" || askText === "") {
-    const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
-    const random = filtered[Math.floor(Math.random() * filtered.length)];
-    return replyWithMention(random);
-  }
-
-  // SIM API
-  try {
-    const res = await axios.get(SIM_API_URL, {
-      params: { type: "ask", ask: askText }
-    });
-
-    if (res.data?.data?.msg) {
-      return replyWithMention(res.data.data.msg);
-    }
-  } catch {
-    return message.reply("⚠️ API error. Try again.");
-  }
-
-  return message.reply("⚠️ Sorry, no reply found.");
-}
-
-export default {
-  config,
-  onCall
-};
+]
