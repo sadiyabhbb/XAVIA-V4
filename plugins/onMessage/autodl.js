@@ -31,12 +31,8 @@ async function onCall({ message }) {
 
     try {
 
-        // ⭐ URL detect → show downloading reaction
-        try { 
-            react("⏳"); 
-        } catch (e) {
-            console.log("React error:", e);
-        }
+        // ⭐ Start downloading reaction
+        try { react("⏳"); } catch {}
 
         const apiUrl = `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`;
         
@@ -64,21 +60,22 @@ async function onCall({ message }) {
         const writer = fs.createWriteStream(path);
         videoStream.data.pipe(writer);
 
-        writer.on('finish', () => {
-            reply({
+        writer.on('finish', async () => {
+
+            // ⭐ Send video (callback আর ব্যবহার করছিনা)
+            const sent = await reply({
                 body: `✅ ${title}`,
                 attachment: fs.createReadStream(path)
-            }, () => {
-
-                // ⭐ Video sent → show downloaded reaction
-                try { 
-                    react("✅"); 
-                } catch (e) {
-                    console.log("React error:", e);
-                }
-
-                if (fs.existsSync(path)) fs.unlinkSync(path);
             });
+
+            // ⭐ Now react on that sent message
+            try { 
+                react("✅", sent.messageID);
+            } catch (e) {
+                console.log("React error:", e);
+            }
+
+            if (fs.existsSync(path)) fs.unlinkSync(path);
         });
 
         writer.on('error', (err) => {
