@@ -15,7 +15,6 @@ const LOCAL_CACHE = "./cache/teach.json";
 const SIM_API_URL = "http://65.109.80.126:20392/sim";
 
 function ensureCache() {
-// ... (ensureCache function is unchanged) ...
   const defaultData = [
     "Hello! How can I help you today?",
     "I'm always here for you!",
@@ -41,73 +40,63 @@ export async function onCall({ message, args }) {
   const replyText = message?.reply_message?.text?.trim();
   let askText = inputText;
 
-  // যদি reply থাকে এবং input না থাকে
-  if (!askText && replyText) {
-    askText = replyText;
-  }
+  if (!askText && replyText) askText = replyText;
 
-  // প্রেরকের পূর্ণ নাম বের করা হচ্ছে
-  const fullName = message.senderName || "বন্ধু"; 
-  
-  // মেনশন কাজ করার জন্য শুধুমাত্র প্রথম শব্দটি ট্যাগ হিসেবে ব্যবহার করা হচ্ছে
-  // এটি নির্ভরযোগ্য মেনশনের জন্য প্রয়োজন।
-  const tagText = fullName.split(' ')[0]; 
+  // Sender Full Name ONLY (no "বন্ধু", no fallback)
+  const fullName = message.senderName || "";
 
-  // === HELPER FUNCTION: Reply with Mention by Name ===
+  // === Perfect Mention Function ===
   const replyWithMention = (text) => {
-    // Message Body: এখানে শুধুমাত্র প্রথম নামটি + মেসেজ থাকবে।
-    // Output: "Likhon What's up? 😊" এবং Likhon অংশটি ট্যাগ হবে।
-    const bodyText = `${tagText} ${text}`;
-    
+    const bodyText = `${fullName}, ${text}`;
+
     return message.reply({
       body: bodyText,
       mentions: [
         {
-          // Tag: body-তে থাকা যে টেক্সটটি ট্যাগ হবে, সেটি (Space ছাড়া)
-          tag: tagText, 
-          // Id: প্রেরকের ID
-          id: message.senderID 
+          tag: fullName,
+          id: message.senderID
         }
       ]
     });
   };
 
-  // ================= TAG DETECT =================
+  // Detect bot tag
   const isBotTagged =
     message?.mentions && Object.keys(message.mentions).includes(global.botID);
 
-  // যদি কেউ বটকে tag করে → random message with mention
+  // ==== BOT TAG REPLY ====
   if (isBotTagged) {
     const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
+    const filtered = data.filter(
+      msg => typeof msg === "string" && !msg.startsWith("http")
+    );
 
     if (!filtered.length) return message.reply("⚠️ No valid messages available.");
     const random = filtered[Math.floor(Math.random() * filtered.length)];
-    
-    // মেনশন সহ রিপ্লাই
+
     return replyWithMention(random);
   }
 
-  // ================= RANDOM HI MSG =================
+  // ==== HI or Empty ====
   if (askText.toLowerCase() === "hi" || askText === "") {
     const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
+    const filtered = data.filter(
+      msg => typeof msg === "string" && !msg.startsWith("http")
+    );
 
     if (!filtered.length) return message.reply("⚠️ No valid messages available.");
     const random = filtered[Math.floor(Math.random() * filtered.length)];
-    
-    // মেনশন সহ রিপ্লাই
+
     return replyWithMention(random);
   }
 
-  // ================= SIM API =================
+  // ==== SIM API ====
   try {
     const res = await axios.get(SIM_API_URL, {
       params: { type: "ask", ask: askText }
     });
 
-    if (res.data && res.data.data && res.data.data.msg) {
-      // API থেকে আসা রিপ্লাই মেনশন সহ
+    if (res.data?.data?.msg) {
       return replyWithMention(res.data.data.msg);
     }
   } catch (e) {
