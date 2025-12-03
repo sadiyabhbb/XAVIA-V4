@@ -15,6 +15,7 @@ const LOCAL_CACHE = "./cache/teach.json";
 const SIM_API_URL = "http://65.109.80.126:20392/sim";
 
 function ensureCache() {
+// ... (ensureCache function is unchanged) ...
   const defaultData = [
     "Hello! How can I help you today?",
     "I'm always here for you!",
@@ -45,22 +46,25 @@ export async function onCall({ message, args }) {
     askText = replyText;
   }
 
-  // প্রেরকের নাম বের করার চেষ্টা করছি (ধরে নিচ্ছি message.senderName এখানে আছে)
-  // যদি না পাওয়া যায়, তবে "বন্ধু" ব্যবহার করা হবে।
-  const senderName = message.senderName || "বন্ধু"; 
+  // প্রেরকের পূর্ণ নাম বের করা হচ্ছে
+  const fullName = message.senderName || "বন্ধু"; 
+  
+  // মেনশন কাজ করার জন্য শুধুমাত্র প্রথম শব্দটি ট্যাগ হিসেবে ব্যবহার করা হচ্ছে
+  // এটি নির্ভরযোগ্য মেনশনের জন্য প্রয়োজন।
+  const tagText = fullName.split(' ')[0]; 
 
   // === HELPER FUNCTION: Reply with Mention by Name ===
   const replyWithMention = (text) => {
-    // Message Body: এখানে শুধু নাম থাকবে, সামনে @ থাকবে না।
-    // যেমন: "Likhon Ahmed Bot is alive 😎"
-    const bodyText = `${senderName} ${text}`;
+    // Message Body: এখানে শুধুমাত্র প্রথম নামটি + মেসেজ থাকবে।
+    // Output: "Likhon What's up? 😊" এবং Likhon অংশটি ট্যাগ হবে।
+    const bodyText = `${tagText} ${text}`;
     
     return message.reply({
       body: bodyText,
       mentions: [
         {
-          // Tag: body-তে থাকা যে টেক্সটটি ট্যাগ হবে, সেটি। 
-          tag: senderName, 
+          // Tag: body-তে থাকা যে টেক্সটটি ট্যাগ হবে, সেটি (Space ছাড়া)
+          tag: tagText, 
           // Id: প্রেরকের ID
           id: message.senderID 
         }
