@@ -40,12 +40,12 @@ export async function onCall({ message, args }) {
   const replyText = message?.reply_message?.text?.trim();
   let askText = inputText;
 
+  // যদি reply থাকে → সেই reply-টাই SIM API তে যাবে
   if (!askText && replyText) askText = replyText;
 
-  // ===== FIX: FULL NAME 100% Ensure =====
+  // ===== Sender name get (100% perfect) =====
   let fullName = message.senderName;
 
-  // যদি senderName না আসে → fallback from message.senderID
   if (!fullName || fullName.trim() === "") {
     try {
       const info = await global.api.getUserInfo(message.senderID);
@@ -55,7 +55,7 @@ export async function onCall({ message, args }) {
     }
   }
 
-  // === PERFECT Mention ===
+  // ===== Mention Reply Function =====
   const replyWithMention = (text) => {
     const bodyText = `${fullName}, ${text}`;
 
@@ -70,36 +70,43 @@ export async function onCall({ message, args }) {
     });
   };
 
-  // Bot tag detection
+  // ===== BOT WORD DETECT =====
+  const detectWords = ["bot", "বট", "robot", "robo", "রোবট"];
+  const lower = askText.toLowerCase();
+
+  const botCalled = detectWords.some(word => lower.startsWith(word));
+
+  // ===== Bot ko tag korle =====
   const isBotTagged =
     message?.mentions && Object.keys(message.mentions).includes(global.botID);
 
-  if (isBotTagged) {
+  // ===== RANDOM MESSAGE for bot word or tag =====
+  if (botCalled || isBotTagged) {
     const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
     const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
     const random = filtered[Math.floor(Math.random() * filtered.length)];
+
     return replyWithMention(random);
   }
 
-  // HI or empty
-  if (askText.toLowerCase() === "hi" || askText === "") {
-    const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
-    const random = filtered[Math.floor(Math.random() * filtered.length)];
-    return replyWithMention(random);
+  // ===== If msg is reply to bot → Send to SIM API =====
+  if (replyText && message.reply_message?.senderID === global.botID) {
+    askText = inputText || replyText;
   }
 
-  // SIM API
-  try {
-    const res = await axios.get(SIM_API_URL, {
-      params: { type: "ask", ask: askText }
-    });
+  // ===== SIM API (Main AI Reply) =====
+  if (askText.length > 0) {
+    try {
+      const res = await axios.get(SIM_API_URL, {
+        params: { type: "ask", ask: askText }
+      });
 
-    if (res.data?.data?.msg) {
-      return replyWithMention(res.data.data.msg);
+      if (res.data?.data?.msg) {
+        return replyWithMention(res.data.data.msg);
+      }
+    } catch (e) {
+      return message.reply("⚠️ API error. Try again.");
     }
-  } catch {
-    return message.reply("⚠️ API error. Try again.");
   }
 
   return message.reply("⚠️ Sorry, no reply found.");
