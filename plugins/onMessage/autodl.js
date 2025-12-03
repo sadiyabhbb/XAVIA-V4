@@ -31,8 +31,12 @@ async function onCall({ message }) {
 
     try {
 
-        // ⭐ URL detect — show "downloading" reaction
-        try { await react("⏳"); } catch {}
+        // ⭐ URL detect → show downloading reaction
+        try { 
+            react("⏳"); 
+        } catch (e) {
+            console.log("React error:", e);
+        }
 
         const apiUrl = `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`;
         
@@ -64,10 +68,14 @@ async function onCall({ message }) {
             reply({
                 body: `✅ ${title}`,
                 attachment: fs.createReadStream(path)
-            }, async () => {
+            }, () => {
 
-                // ⭐ After sending file — show "downloaded" reaction
-                try { await react("✅"); } catch {}
+                // ⭐ Video sent → show downloaded reaction
+                try { 
+                    react("✅"); 
+                } catch (e) {
+                    console.log("React error:", e);
+                }
 
                 if (fs.existsSync(path)) fs.unlinkSync(path);
             });
