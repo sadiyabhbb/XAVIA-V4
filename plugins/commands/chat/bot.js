@@ -38,9 +38,14 @@ export async function onCall({ message, args }) {
 
   const inputText = args.join(" ").trim();
   const replyText = message?.reply_message?.text?.trim();
+  let askText = inputText;
 
-  // ========== NAME FIX ==========
+  // যদি reply থাকে → সেই reply-টাই SIM API তে যাবে
+  if (!askText && replyText) askText = replyText;
+
+  // ===== Sender name get (100% perfect) =====
   let fullName = message.senderName;
+
   if (!fullName || fullName.trim() === "") {
     try {
       const info = await global.api.getUserInfo(message.senderID);
@@ -50,50 +55,61 @@ export async function onCall({ message, args }) {
     }
   }
 
-  // ==== MENTION FUNCTION ====
+  // ===== Mention Reply Function =====
   const replyWithMention = (text) => {
+    const bodyText = `${fullName}, ${text}`;
+
     return message.reply({
-      body: `${fullName}, ${text}`,
-      mentions: [{ tag: fullName, id: message.senderID }]
+      body: bodyText,
+      mentions: [
+        {
+          tag: fullName,
+          id: message.senderID
+        }
+      ]
     });
   };
 
-  // ===== bot word detect =====
-  const triggers = ["bot", "বট", "robot", "robo", "রোবট"];
-  const msgLower = inputText.toLowerCase();
+  // ===== BOT WORD DETECT =====
+  const detectWords = ["bot", "বট", "robot", "robo", "রোবট"];
+  const lower = askText.toLowerCase();
 
-  const calledBot = triggers.some(w => msgLower.startsWith(w));
+  const botCalled = detectWords.some(word => lower.startsWith(word));
 
-  // ========== CASE 1: user says "bot" → RANDOM MESSAGE ==========
-  if (calledBot) {
+  // ===== Bot ko tag korle =====
+  const isBotTagged =
+    message?.mentions && Object.keys(message.mentions).includes(global.botID);
+
+  // ===== RANDOM MESSAGE for bot word or tag =====
+  if (botCalled || isBotTagged) {
     const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const filtered = data.filter(m => typeof m === "string" && !m.startsWith("http"));
+    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
     const random = filtered[Math.floor(Math.random() * filtered.length)];
 
     return replyWithMention(random);
   }
 
-  // ========== CASE 2: user replies to bot → SEND TO SIM API ==========
+  // ===== If msg is reply to bot → Send to SIM API =====
   if (replyText && message.reply_message?.senderID === global.botID) {
-    const ask = inputText || replyText;
+    askText = inputText || replyText;
+  }
 
+  // ===== SIM API (Main AI Reply) =====
+  if (askText.length > 0) {
     try {
       const res = await axios.get(SIM_API_URL, {
-        params: { type: "ask", ask }
+        params: { type: "ask", ask: askText }
       });
 
       if (res.data?.data?.msg) {
         return replyWithMention(res.data.data.msg);
-      } else {
-        return replyWithMention("কিছু বুঝলাম না 😅");
       }
-    } catch {
-      return message.reply("⚠️ API error!");
+    } catch (e) {
+      return message.reply("⚠️ API error. Try again.");
     }
   }
 
-  // OTHERWISE → ignore
-  return;
+  return message.reply("⚠️ Sorry, no reply found.");
 }
 
 export default {
