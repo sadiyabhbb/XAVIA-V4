@@ -45,18 +45,33 @@ export async function onCall({ message, args }) {
     askText = replyText;
   }
 
+  // === HELPER FUNCTION: Reply with Mention ===
+  const replyWithMention = (text) => {
+    return message.reply({
+      body: `@User ${text}`, // নামের জায়গায় @User দেখাবে, কিন্তু মেনশন হবে sender-এর
+      mentions: [
+        {
+          tag: "@User",
+          id: message.senderID // যে মেসেজ দিয়েছে তার ID
+        }
+      ]
+    });
+  };
+
   // ================= TAG DETECT =================
   const isBotTagged =
     message?.mentions && Object.keys(message.mentions).includes(global.botID);
 
-  // যদি কেউ বটকে tag করে → random message
+  // যদি কেউ বটকে tag করে → random message with mention
   if (isBotTagged) {
     const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
     const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
 
     if (!filtered.length) return message.reply("⚠️ No valid messages available.");
     const random = filtered[Math.floor(Math.random() * filtered.length)];
-    return message.reply(random);
+    
+    // মেনশন সহ রিপ্লাই
+    return replyWithMention(random);
   }
 
   // ================= RANDOM HI MSG =================
@@ -66,7 +81,9 @@ export async function onCall({ message, args }) {
 
     if (!filtered.length) return message.reply("⚠️ No valid messages available.");
     const random = filtered[Math.floor(Math.random() * filtered.length)];
-    return message.reply(random);
+    
+    // মেনশন সহ রিপ্লাই
+    return replyWithMention(random);
   }
 
   // ================= SIM API =================
@@ -76,7 +93,8 @@ export async function onCall({ message, args }) {
     });
 
     if (res.data && res.data.data && res.data.data.msg) {
-      return message.reply(res.data.data.msg);
+      // API থেকে আসা রিপ্লাই মেনশন সহ
+      return replyWithMention(res.data.data.msg);
     }
   } catch (e) {
     return message.reply("⚠️ API error. Try again.");
