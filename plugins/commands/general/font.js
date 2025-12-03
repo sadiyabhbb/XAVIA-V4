@@ -14,7 +14,7 @@ const langData = {
     "en_US": {
         "noText": "Please provide text to convert.",
         "invalidType": "Invalid font type. Use /font to see all types.",
-        "converted": "Converted Text:\n{result}"
+        "converted": "{result}"
     }
 };
 
