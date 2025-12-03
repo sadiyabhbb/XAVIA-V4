@@ -45,14 +45,24 @@ export async function onCall({ message, args }) {
     askText = replyText;
   }
 
-  // === HELPER FUNCTION: Reply with Mention ===
+  // প্রেরকের নাম বের করার চেষ্টা করছি (ধরে নিচ্ছি message.senderName এখানে আছে)
+  // যদি না পাওয়া যায়, তবে "বন্ধু" ব্যবহার করা হবে।
+  const senderName = message.senderName || "বন্ধু"; 
+
+  // === HELPER FUNCTION: Reply with Mention by Name ===
   const replyWithMention = (text) => {
+    // Message Body: এখানে শুধু নাম থাকবে, সামনে @ থাকবে না।
+    // যেমন: "Likhon Ahmed Bot is alive 😎"
+    const bodyText = `${senderName} ${text}`;
+    
     return message.reply({
-      body: `@User ${text}`, // নামের জায়গায় @User দেখাবে, কিন্তু মেনশন হবে sender-এর
+      body: bodyText,
       mentions: [
         {
-          tag: "@User",
-          id: message.senderID // যে মেসেজ দিয়েছে তার ID
+          // Tag: body-তে থাকা যে টেক্সটটি ট্যাগ হবে, সেটি। 
+          tag: senderName, 
+          // Id: প্রেরকের ID
+          id: message.senderID 
         }
       ]
     });
