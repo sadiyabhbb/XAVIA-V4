@@ -18,7 +18,7 @@ const langData = {
     }
 };
 
-// ===================== FONT MAPS ===========================
+
 const fontMaps = [
     {
         name: 'a',
@@ -120,7 +120,7 @@ const fontMaps = [
     }
 ];
 
-// ===================== FONT PAGE ============================
+
 const fontPage = `
 ★━━━━━━━━━━━━★
        🔰 FONT PAGE 🔰
@@ -150,13 +150,13 @@ For example: /font a Hello World!
 ★━━━━━━━━━━━━★
 `;
 
-// ===================== MAIN ================================
+
 function convert(text, map) {
     return text.split("").map(c => map[c] || c).join("");
 }
 
 async function onCall({ message, args, getLang }) {
-    // no args → show font page
+    
     if (args.length === 0) {
         return message.reply(fontPage);
     }
