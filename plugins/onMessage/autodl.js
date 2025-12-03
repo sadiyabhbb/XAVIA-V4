@@ -17,7 +17,7 @@ const supportedDomains = [
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 async function onCall({ message }) {
-    const { senderID, body, reply } = message;
+    const { senderID, body, reply, react } = message;
 
     if (senderID == global.botID) return;
     if (!body) return;
@@ -30,6 +30,10 @@ async function onCall({ message }) {
     if (!isSupported) return; 
 
     try {
+
+        // ⭐ URL detect — show "downloading" reaction
+        try { await react("⏳"); } catch {}
+
         const apiUrl = `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`;
         
         const res = await axios.get(apiUrl);
@@ -40,15 +44,12 @@ async function onCall({ message }) {
 
         if (!videoUrl) return; 
 
-        // === FIX START ===
-        // Cache folder na thakle baniye nibe
         const cacheDir = resolve(process.cwd(), "core", "var", "cache");
         if (!fs.existsSync(cacheDir)) {
             fs.mkdirSync(cacheDir, { recursive: true });
         }
         
         const path = resolve(cacheDir, `autodl_${Date.now()}.mp4`);
-        // === FIX END ===
         
         const videoStream = await axios({
             method: 'get',
@@ -63,7 +64,11 @@ async function onCall({ message }) {
             reply({
                 body: `✅ ${title}`,
                 attachment: fs.createReadStream(path)
-            }, () => {
+            }, async () => {
+
+                // ⭐ After sending file — show "downloaded" reaction
+                try { await react("✅"); } catch {}
+
                 if (fs.existsSync(path)) fs.unlinkSync(path);
             });
         });
