@@ -19,7 +19,7 @@ console.clear();
 const originalLog = console.log;
 console.log = function(...args) {
     const message = args.join(' ');
-    if (message.includes('ArYAN - FCA')) {
+    if (message.includes('LikHoN - FCA')) {
         return; // Skip NeoKEX logs
     }
     originalLog.apply(console, args);
