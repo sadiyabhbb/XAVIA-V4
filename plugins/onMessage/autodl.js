@@ -31,7 +31,7 @@ async function onCall({ message }) {
 
     try {
 
-        // ⭐ Start downloading reaction
+     
         try { react("⏳"); } catch {}
 
         const apiUrl = `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`;
@@ -62,13 +62,13 @@ async function onCall({ message }) {
 
         writer.on('finish', async () => {
 
-            // ⭐ Send video (callback আর ব্যবহার করছিনা)
+            
             const sent = await reply({
                 body: `✅ ${title}`,
                 attachment: fs.createReadStream(path)
             });
 
-            // ⭐ Now react on that sent message
+            
             try { 
                 react("✅", sent.messageID);
             } catch (e) {
