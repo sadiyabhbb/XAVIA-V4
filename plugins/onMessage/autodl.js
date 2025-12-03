@@ -17,7 +17,7 @@ const supportedDomains = [
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 async function onCall({ message }) {
-    const { senderID, body, reply } = message;
+    const { senderID, body, reply, react } = message;
 
     if (senderID == global.botID) return;
     if (!body) return;
@@ -27,7 +27,12 @@ async function onCall({ message }) {
 
     const url = match[0];
     const isSupported = supportedDomains.some(domain => url.includes(domain));
+    
     if (!isSupported) return; 
+
+    // === REACTION START (Download shuru) ===
+    await react("⏳");
+    // =======================================
 
     try {
         const apiUrl = `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`;
@@ -38,17 +43,17 @@ async function onCall({ message }) {
         const videoUrl = data.data?.high || data.data?.low || data.url || data.video;
         const title = data.data?.title || "Auto Downloader";
 
-        if (!videoUrl) return; 
+        if (!videoUrl) {
+            // Link na pele Cross reaction dibe
+            return react("❌");
+        }
 
-        // === FIX START ===
-        // Cache folder na thakle baniye nibe
         const cacheDir = resolve(process.cwd(), "core", "var", "cache");
         if (!fs.existsSync(cacheDir)) {
             fs.mkdirSync(cacheDir, { recursive: true });
         }
         
         const path = resolve(cacheDir, `autodl_${Date.now()}.mp4`);
-        // === FIX END ===
         
         const videoStream = await axios({
             method: 'get',
@@ -60,6 +65,10 @@ async function onCall({ message }) {
         videoStream.data.pipe(writer);
 
         writer.on('finish', () => {
+            // === REACTION DONE (Video send hole) ===
+            react("✅");
+            // =======================================
+
             reply({
                 body: `✅ ${title}`,
                 attachment: fs.createReadStream(path)
@@ -70,10 +79,12 @@ async function onCall({ message }) {
 
         writer.on('error', (err) => {
             console.error("[AutoDL] Stream Error:", err);
+            react("❌"); // Error hole Cross
         });
 
     } catch (e) {
         console.error("[AutoDL] API Error:", e.message);
+        react("❌"); // API Error hole Cross
     }
 }
 
