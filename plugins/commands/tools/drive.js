@@ -11,6 +11,7 @@ const config = {
   usage: "[link] or reply to media/file",
   credits: "ArYAN",
   permissions: 0,
+  nixprefix: true,
   cooldown: 5,
   category: "Utility"
 };
