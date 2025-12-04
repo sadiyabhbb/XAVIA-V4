@@ -1,15 +1,731 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Likhon Ahmed - Full-Stack Developer | Designer | Open Source Contributor" />
+    <meta name="author" content="Likhon Ahmed" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <title>Likhon Ahmed | Minimal Dark Portfolio</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+    <style>
+        /* CSS কোড অপরিবর্তিত আছে */
+        :root {
+            --bg: #1a1a1a; 
+            --card: #252525; 
+            --text-primary: #e0e0e0; 
+            --text-secondary: #aaaaaa; 
+            --accent-main: #00bcd4; 
+            --accent-hover: #00a8bd; 
+            --border: #444444; 
+            --radius: 8px; 
+            --padding-base: 2.2rem;
+            --font-body: 'Inter', sans-serif;
+            --font-heading: 'Space Mono', monospace;
+            --transition: all 0.3s ease-out;
+            --shadow-subtle: 0 4px 8px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            transition: var(--transition);
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--accent-main);
+            transition: color 0.2s ease;
+        }
+        a:hover {
+            color: var(--accent-hover);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 3.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: var(--padding-base);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-subtle);
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-3px);
+        }
+
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1.5rem;
+            padding: 4rem 1.5rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-subtle);
+            margin-top: 1rem;
+        }
+
+        .avatar {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-main);
+            padding: 3px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-hover);
+        }
+
+        .name {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+        
+        .title {
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--accent-main);
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .bio {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+        }
+
+        .random-avatar-btn {
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.75rem;
+            background: var(--accent-main);
+            color: var(--bg);
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-family: var(--font-body);
+            letter-spacing: 0.5px;
+            transition: var(--transition);
+        }
+        
+        .random-avatar-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem;
+            margin-top: 1.8rem;
+        }
+
+        .social-links a {
+            width: 45px;
+            height: 45px;
+            background: var(--border);
+            color: var(--text-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+        
+        .social-links a:hover {
+            background: var(--accent-main);
+            color: var(--bg);
+            transform: translateY(-3px) rotate(5deg);
+        }
+
+        .section h2 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.8rem;
+            color: var(--accent-main);
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+        
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px; 
+            height: 3px;
+            background: var(--accent-main);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        .section h2:hover::after {
+            width: 80px;
+        }
+        
+        .section p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        .video-container {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-subtle);
+            margin-top: 1.5rem;
+        }
+
+        .mute-toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            z-index: 10;
+        }
+        
+        .mute-toggle-btn:hover {
+            background: var(--accent-main);
+            color: var(--bg);
+            transform: scale(1.1);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .skill {
+            background: var(--bg);
+            color: var(--text-primary);
+            padding: 1.2rem 0.8rem;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .skill img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 3px rgba(0, 188, 212, 0.4));
+            transition: transform 0.2s ease;
+        }
+        
+        .skill:hover {
+            transform: translateY(-5px);
+            background: var(--accent-main);
+            color: var(--bg);
+            border-color: var(--accent-main);
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .skill:hover img {
+            transform: scale(1.1);
+            filter: none;
+        }
+
+        .contact-form {
+            display: grid;
+            gap: 1.2rem;
+        }
+        
+        .contact-form input, .contact-form textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .contact-form input:focus, .contact-form textarea:focus {
+            border-color: var(--accent-main);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.3);
+        }
+        
+        .contact-form textarea {
+            resize: vertical;
+        }
+
+        .contact-form button {
+            background: var(--accent-main);
+            color: var(--bg);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            justify-self: start;
+        }
+        
+        .contact-form button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .notify-wrap {
+            position: relative;
+            margin-top: 1.5rem;
+            min-height: 40px;
+        }
+        
+        .toast {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background: var(--card);
+            border: 1px solid;
+            padding: 1rem 1.2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-subtle);
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            transform: translateY(-15px);
+            opacity: 0;
+            transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+            max-width: 350px;
+            z-index: 50;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            border-left: 5px solid #28a745;
+        }
+        
+        .toast.error {
+            border-left: 5px solid #dc3545;
+        }
+        
+        .toast .msg-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .toast .msg-body {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5rem;
+            border-top: 1px solid var(--border);
+            font-family: var(--font-body);
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 992px) {
+            .hero-section {
+                padding: 3rem 1rem;
+            }
+            .name {
+                font-size: 2.5rem;
+            }
+            .title {
+                font-size: 1.1rem;
+            }
+            .section h2 {
+                font-size: 1.8rem;
+            }
+            .container {
+                padding: 2rem 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .card {
+                padding: 1.5rem;
+            }
+            .skills-grid {
+                grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+                gap: 1rem;
+            }
+            .name {
+                font-size: 2rem;
+            }
+            .mute-toggle-btn {
+                top: 10px;
+                right: 10px;
+                width: 35px;
+                height: 35px;
+                font-size: 1.1rem;
+            }
+            .toast {
+                left: 50%;
+                transform: translate(-50%, -15px);
+                right: auto;
+                max-width: calc(100% - 2rem);
+            }
+            .random-avatar-btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 </head>
+<body data-theme="dark">
 
-<body>
-    hello from XaviaTeam (≧∇≦)ﾉ
+    <div class="container">
+        
+        <header class="hero-section" data-aos="fade-down" data-aos-delay="100">
+            <img src="https://i.imgur.com/Q3pUH3k.jpeg" alt="Likhon Ahmed's Photo" class="avatar" id="avatar" />
+            <h1 class="name">LIKHON AHMED</h1>
+            <p class="title">Full-Stack Developer & Designer</p>
+            <p class="bio">
+                Building **modern, high-performance, and intuitively designed** web solutions. I focus on creating clean, functional digital experiences that make an impact. Based in <span style="color:var(--accent-main)">Bangladesh</span>.
+            </p>
+
+            <div class="social-links">
+                <a href="https://github.com/MOHAMMAD-NAYAN-07" target="_blank" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://facebook.com/likhonahmed009" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://wa.me/8801951927485" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                <a href="https://t.me/rx_rihad" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+            </div>
+
+            <button class="random-avatar-btn" id="changeAvatarBtn">
+                Change Avatar
+            </button>
+        </header>
+
+        <main class="main-content">
+            
+            <section class="card" data-aos="fade-up" data-aos-delay="200">
+                <h2>About Me</h2>
+                <p>
+                    Hi! I'm Likhon, a passionate full-stack developer from <strong>Bangladesh</strong>. I specialize in the MERN stack (MongoDB, Express, React, Node.js) and believe in turning complex problems into elegant, user-friendly digital solutions. My focus is on creating fast, scalable, and beautifully designed web experiences.
+                </p>
+            </section>
+            
+            <section class="card video-section" data-aos="fade-up" data-aos-delay="300">
+                 <h2>A Quick Look</h2>
+                <div class="video-container">
+                    <video 
+                        width="100%" 
+                        id="myVideo"
+                        autoplay 
+                        loop 
+                        muted 
+                        playsinline 
+                        style="display: block;"
+                    >
+                        <source src="https://i.imgur.com/9drbG5B.mp4" type="video/mp4">
+                        আপনার ব্রাউজার ভিডিও ট্যাগ সমর্থন করে না।
+                    </video>
+                    <button class="mute-toggle-btn" id="muteToggleBtn" title="Click to Unmute">
+                        <i class="fas fa-volume-mute"></i>
+                    </button>
+                </div>
+                <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    A brief demonstration of my recent work.
+                </p>
+            </section>
+
+            <section class="card" data-aos="fade-up" data-aos-delay="400">
+                 <h2>Core Skills</h2>
+                <div class="skills-grid">
+                    
+                    <div class="skill" data-aos="zoom-in" data-aos-delay="200">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" alt="React">
+                        <div>React</div>
+                    </div>
+                    <div class="skill" data-aos="zoom-in" data-aos-delay="300">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" alt="Node.js">
+                        <div>Node.js</div>
+                    </div>
+                    <div class="skill" data-aos="zoom-in" data-aos-delay="400">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" alt="MongoDB">
+                        <div>MongoDB</div>
+                    </div>
+                    <div class="skill" data-aos="zoom-in" data-aos-delay="500">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JavaScript">
+                        <div>JS (ES6+)</div>
+                    </div>
+                    <div class="skill" data-aos="zoom-in" data-aos-delay="600">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML5">
+                        <div>HTML5</div>
+                    </div>
+                    <div class="skill" data-aos="zoom-in" data-aos-delay="700">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS3">
+                        <div>CSS3</div>
+                    </div>
+                    <div class="skill" data-aos="zoom-in" data-aos-delay="800">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" alt="Git">
+                        <div>Git/GitHub</div>
+                    </div>
+                    <div class="skill" data-aos="zoom-in" data-aos-delay="900">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python">
+                        <div>Python</div>
+                    </div>
+                    
+                </div>
+            </section>
+            
+            <section class="card" data-aos="fade-up" data-aos-delay="500">
+                <h2>Get In Touch</h2>
+                <form class="contact-form" id="contactForm">
+                    <input type="text" name="name" placeholder="Your Name" required />
+                    <textarea name="message" rows="5" placeholder="Your Message / Project Inquiry" required maxlength="3900"></textarea>
+                    <button type="submit">Send Message &nbsp;<i class="fas fa-paper-plane"></i></button>
+                </form>
+
+                <div class="notify-wrap" id="notifyWrap" aria-live="polite"></div>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        &copy; <span id="year">2025</span> Likhon Ahmed. Made with <i class="fas fa-heart" style="color:#e11d48;"></i> in Bangladesh.
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+    <script>
+        // AOS Initialization
+        AOS.init({ duration: 700, once: true, offset: 80 });
+
+        // Set current year in footer
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // ===== VIDEO UNMUTE LOGIC =====
+        const videoElement = document.getElementById('myVideo');
+        const muteToggleBtn = document.getElementById('muteToggleBtn');
+
+        if (videoElement && muteToggleBtn) {
+            muteToggleBtn.addEventListener('click', () => {
+                if (videoElement.muted) {
+                    videoElement.muted = false;
+                    muteToggleBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    muteToggleBtn.setAttribute('title', 'Mute Sound');
+                } else {
+                    videoElement.muted = true;
+                    muteToggleBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                    muteToggleBtn.setAttribute('title', 'Unmute Sound');
+                }
+            });
+        }
+        // ==============================
+
+        // ===== AVATAR LOGIC (Using Imgur Links) =====
+        const avatarLinks = [
+            "https://i.imgur.com/Rf6nzPm.jpeg",
+            "https://i.imgur.com/qWSoRn0.jpeg",
+            "https://i.imgur.com/Bkub0aq.jpeg",
+            "https://i.imgur.com/SPTbt5u.jpeg",
+        ];
+
+        const avatarElement = document.getElementById('avatar');
+        const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+        const originalAvatarSrc = "https://i.imgur.com/Q3pUH3k.jpeg"; 
+
+        if (changeAvatarBtn) {
+            changeAvatarBtn.addEventListener('click', () => {
+                const allLinks = [originalAvatarSrc, ...avatarLinks];
+                let currentIndex = allLinks.findIndex(link => avatarElement.src.includes(link.split('/').pop()));
+                
+                let nextIndex;
+                if (currentIndex === -1 || currentIndex === allLinks.length - 1) {
+                    nextIndex = Math.floor(Math.random() * allLinks.length); 
+                } else {
+                    nextIndex = currentIndex + 1;
+                }
+                
+                avatarElement.src = allLinks[nextIndex];
+            });
+        }
+        // ==============================================
+
+
+        // ===== Telegram Contact Form Script (No Email Field) =====
+        const BOT_TOKEN = "8034233581:AAGFU20lM81YI8_rMZ0YaEvM8rMG87AO2gM"; 
+        const CHAT_ID = "7933110913"; 
+
+        const notifyWrap = document.getElementById('notifyWrap');
+
+        function showToast(type, title, body, timeout = 4500) {
+            notifyWrap.querySelectorAll('.toast').forEach(t => t.remove());
+            const t = document.createElement('div');
+            t.className = `toast ${type}`; 
+            t.innerHTML = `
+                <div style="display:flex;align-items:center;gap:0.6rem">
+                    <div style="font-size:1.1rem">${type === 'success' ? '✅' : '❌'}</div>
+                    <div>
+                        <div class="msg-title">${title}</div>
+                        <div class="msg-body">${body}</div>
+                    </div>
+                </div>
+            `;
+            notifyWrap.appendChild(t);
+            requestAnimationFrame(() => {
+                t.classList.add('show');
+            });
+
+            setTimeout(() => {
+                t.classList.remove('show');
+                t.addEventListener('transitionend', () => t.remove(), { once: true });
+            }, timeout);
+        }
+
+        document.getElementById("contactForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const name = e.target.name.value.trim();
+            const message = e.target.message.value.trim(); 
+
+            // এখানে ক্যারেক্টার লিমিট চেক করার দরকার নেই কারণ HTML এ maxlength সেট করা আছে
+            if (!name || !message) {
+                showToast('error', 'Incomplete', 'অনুগ্রহ করে নাম এবং মেসেজ লিখুন।');
+                return;
+            }
+
+            showToast('success', 'Sending…', 'আপনার মেসেজটি পাঠানো হচ্ছে।');
+
+            const dateTime = new Date().toLocaleString();
+            let ipDetails = 'IP details unavailable.';
+            let simpleIp = 'N/A';
+            
+            // IP & Geo-location Fetching Logic 
+            try {
+                const geoRes = await fetch("http://ip-api.com/json/");
+                const geoData = await geoRes.json();
+                if (geoData.status === 'success') {
+                    ipDetails = JSON.stringify(geoData, null, 2);
+                    simpleIp = geoData.query;
+                } else {
+                    throw new Error(`ip-api failed: ${geoData.message}`);
+                }
+            } catch (error) {
+                try {
+                    const ipRes = await fetch("https://api.ipify.org?format=json");
+                    const ipData = await ipRes.json();
+                    simpleIp = ipData.ip || 'N/A';
+                    ipDetails = `IP Only (Location details unavailable):\n${JSON.stringify(ipData, null, 2)}`;
+                } catch (basicError) {
+                    simpleIp = 'N/A';
+                    ipDetails = 'IP details completely unavailable.';
+                }
+            }
+
+            try {
+                // Construct the message for Telegram
+                const rawText = `
+✨ *NEW MESSAGE RECEIVED (Minimal Portfolio)* ✨
+-------------------------------------
+👤 *Name:* ${name}
+💬 *Message:* ${message}
+
+🌐 *IP Address:* \`${simpleIp}\`
+🕒 *Time (BD):* ${dateTime}
+-------------------------------------
+🚨🚨 *FULL GEOLOCATION DATA (JSON)* 🚨🚨
+\`\`\`json
+${ipDetails}
+\`\`\`
+                `;
+
+                const encodedText = encodeURIComponent(rawText);
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodedText}&parse_mode=Markdown`;
+
+                const res = await fetch(url);
+
+                if (res.ok) {
+                    showToast('success', 'Sent Successfully', 'ধন্যবাদ — আপনার মেসেজটি সফলভাবে পাঠানো হয়েছে।');
+                    e.target.reset();
+                } else {
+                    showToast('error', 'Not Sent', 'Telegram API তে সমস্যা হয়েছে।');
+                }
+            } catch (error) {
+                showToast('error', 'Network Error', 'Telegram API এর সাথে সংযোগ স্থাপন করা যায়নি।');
+            }
+        });
+    </script>
 </body>
-
 </html>
