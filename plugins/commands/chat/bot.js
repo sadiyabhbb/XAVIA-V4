@@ -38,70 +38,71 @@ export async function onCall({ message, args }) {
 
   const inputText = args.join(" ").trim();
 
-  // Full Name Fix
+  // Full Name 100% পাওয়া
   let fullName = message.senderName || "User";
   if (!fullName || fullName.trim() === "") {
     try {
       const info = await global.api.getUserInfo(message.senderID);
       fullName = info[message.senderID]?.name || "User";
-    } catch (e) {
+    } catch {
       fullName = "User";
     }
   }
 
+  // এই ফরম্যাটে রিপ্লাই দিবে → ( {নাম}, ) মেসেজ
   const replyWithMention = (text) => {
     return message.reply({
-      body: `\( {fullName}, \){text}`,
+      body: `( {\( {fullName}, ) \){text}`,
       mentions: [{ tag: fullName, id: message.senderID }]
     });
   };
 
-  // ১. Bot ট্যাগ করলে বা "bot" / "hi" / খালি মেসেজ → র‍্যান্ডম রিপ্লাই
-  const isBotTagged = message?.mentions && Object.keys(message.mentions).includes(global.botID);
-  const isBotCall = inputText === "" || 
-                    inputText.toLowerCase() === "hi" || 
-                    inputText.toLowerCase().startsWith("bot");
+  // ১. Bot কে ট্যাগ করা হয়েছে কি না?
+  const isBotTagged = message.mentions && Object.keys(message.mentions).includes(global.botID);
 
-  if (isBotTagged || isBotCall) {
-    // যদি Bot-এর মেসেজের রিপ্লাই দেওয়া হয় → তাহলে SIM API চালাবে (নিচে চেক করা হয়েছে)
-    if (message.reply_message && message.reply_message.senderID === global.botID) {
-      // এটা রিপ্লাই → SIM API তে যাবে (নিচে হবে)
-    } else {
-      // প্রথমবার ডাকা হচ্ছে → র‍্যান্ডম মেসেজ
-      const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-      const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
-      const random = filtered[Math.floor(Math.random() * filtered.length)];
-      return replyWithMention(random);
+  // ২. Bot-এর মেসেজের রিপ্লাই দেওয়া হয়েছে কি না? (এটাই মূল চেক)
+  const isReplyToBot = message.reply_message && message.reply_message.senderID === global.botID;
+
+  // ৩. প্রথমবার ডাকা হচ্ছে (bot / hi / ট্যাগ / খালি) → র‍্যান্ডম মেসেজ
+  const isFirstCall = isBotTagged || 
+                      inputText === "" || 
+                      inputText.toLowerCase() === "hi" || 
+                      inputText.toLowerCase().startsWith("bot");
+
+  if (isFirstCall && !isReplyToBot) {
+    const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
+    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
+    const random = filtered[Math.floor(Math.random() * filtered.length)];
+    return replyWithMention(random);
+  }
+
+  // ৪. Bot-এর মেসেজের রিপ্লাই দিলে → SIM API চালাবে (এটাই তুমি চেয়েছিলে)
+  if (isReplyToBot || isBotTagged || inputText) {
+    let ask = message.body?.trim() || inputText || "হুম বলো";
+
+    // যদি শুধু রিপ্লাই দেয় আর কিছু না লেখে → তবুও কাজ করবে
+    if (isReplyToBot && !message.body?.trim()) {
+      ask = "হুম বলো 😊";
     }
-  }
 
-  // ২. Bot-এর মেসেজের রিপ্লাই দিলে → SIM API
-  let askText = inputText;
-
-  if (message.reply_message && message.reply_message.senderID === global.botID) {
-    askText = message.body.trim() || "হুম বলো";
-  }
-
-  // যদি কোনো টেক্সট থাকে তাহলে SIM API চালাবে
-  if (askText) {
     try {
       const res = await axios.get(SIM_API_URL, {
-        params: { type: "ask", ask: askText }
+        params: { type: "ask", ask: ask }
       });
 
       if (res.data?.data?.msg) {
         return replyWithMention(res.data.data.msg);
       } else {
-        return replyWithMention("একটু ভেবে বলছি... 😅");
+        return replyWithMention("একটু ভেবে বলছি... 🥺");
       }
     } catch (err) {
       console.error("SIM API Error:", err.message);
-      return replyWithMention("⚠️ সার্ভারে সমস্যা, পরে বলো 🥲");
+      return replyWithMention("সার্ভার ডাউন ভাই, পরে বলিস 😭");
     }
   }
 
-  // ফলব্যাক
-  return replyWithMention("কিছু বলো না কেন? 😊");
+  // কিছুই না মিললে
+  return replyWithMention("কিছু বল না কেনো? 😏");
 }
 
 export default {
