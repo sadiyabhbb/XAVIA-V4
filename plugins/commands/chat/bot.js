@@ -4,7 +4,7 @@ import fs from "fs";
 const config = {
   name: "bot",
   description: "Auto chat with loop using SIM API",
-  usage: "bot hi | bot <message>",
+  usage: "bot hi | bot <your message>",
   cooldown: 3,
   permissions: [0],
   nixprefix: true,
@@ -16,89 +16,97 @@ const SIM_API_URL = "http://65.109.80.126:20392/sim";
 
 function ensureCache() {
   const defaultData = [
-    "আহ শুনা আমার তোমার অলিতে গলিতে উম্মাহ",
-    "কি গো সোনা আমাকে ডাকছ কেনো",
-    "বার বার আমাকে ডাকস কেন",
-    "আহ শোনা আমার আমাকে এতো ডাক্তাছো কেনো আসো বুকে আশো",
-    "হুম জান তোমার অইখানে উম্মমাহ",
-    "আসসালামু আলাইকুম বলেন আপনার জন্য কি করতে পারি",
-    "আমাকে এতো না ডেকে বস নয়নকে একটা গফ দে",
-    "jang hanga korba",
-    "jang bal falaba"
-  ];
+    "আহ শুনা আমার তোমার অলিতে গলিতে উম্মাহ😇😘",
+          "কি গো সোনা আমাকে ডাকছ কেনো",
+          "বার বার আমাকে ডাকস কেন😡",
+          "আহ শোনা আমার আমাকে এতো ডাক্তাছো কেনো আসো বুকে আশো🥱",
+          "হুম জান তোমার অইখানে উম্মমাহ😷😘",
+          "আসসালামু আলাইকুম বলেন আপনার জন্য কি করতে পারি",
+          "আমাকে এতো না ডেকে বস নয়নকে একটা গফ দে 🙄",
+          "jang hanga korba",
+          "jang bal falaba🙂"
+        ];
 
   if (!fs.existsSync("./cache")) fs.mkdirSync("./cache");
+
   if (!fs.existsSync(LOCAL_CACHE)) {
-    fs.writeFileSync(LOCAL_CACHE, JSON.stringify(defaultData, null, 2));
+    fs.writeFileSync(LOCAL_CACHE, JSON.stringify(defaultData, null, 2), "utf-8");
   }
 }
 
 export async function onCall({ message, args }) {
   ensureCache();
 
-  const input = args.join(" ").trim();
-  const botID = global.botID?.toString(); // স্ট্রিং করে নিচ্ছি
+  const inputText = args.join(" ").trim();
+  const replyText = message?.reply_message?.text?.trim();
+  let askText = inputText;
 
-  // Full Name
-  let name = "User";
-  if (message.senderName) name = message.senderName;
-  else {
+  if (!askText && replyText) askText = replyText;
+
+  // ===== FIX: FULL NAME 100% Ensure =====
+  let fullName = message.senderName;
+
+  // যদি senderName না আসে → fallback from message.senderID
+  if (!fullName || fullName.trim() === "") {
     try {
       const info = await global.api.getUserInfo(message.senderID);
-      name = info[message.senderID]?.name || "User";
-    } catch {}
+      fullName = info[message.senderID]?.name || "User";
+    } catch {
+      fullName = "User";
+    }
   }
 
-  const send = (text) => message.reply({
-    body: `( {\( {name}, ) \){text}`,
-    mentions: [{ tag: name, id: message.senderID }]
-  });
+  // === PERFECT Mention ===
+  const replyWithMention = (text) => {
+    const bodyText = `${fullName}, ${text}`;
 
-  // র‍্যান্ডম মেসেজ ফাংশন
-  const randomReply = () => {
-    const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
-    const clean = data.filter(m => typeof m === "string" && !m.startsWith("http"));
-    const msg = clean[Math.floor(Math.random() * clean.length)];
-    return send(msg);
+    return message.reply({
+      body: bodyText,
+      mentions: [
+        {
+          tag: fullName,
+          id: message.senderID
+        }
+      ]
+    });
   };
 
-  // ১. Bot কে ট্যাগ করা হয়েছে কিনা?
-  const taggedBot = message.mentions && Object.keys(message.mentions).some(id => id === botID);
+  // Bot tag detection
+  const isBotTagged =
+    message?.mentions && Object.keys(message.mentions).includes(global.botID);
 
-  // ২. Bot-এর মেসেজের রিপ্লাই দেওয়া হয়েছে কিনা? (মূল ফিক্স)
-  const isReplyToBot = message.reply_message && 
-                       message.reply_message.senderID?.toString() === botID;
-
-  // প্রথমবার ডাকলে (bot / hi / ট্যাগ / খালি) → র‍্যান্ডম
-  if ((taggedBot || input === "" || input.toLowerCase() === "hi" || input.startsWith("bot")) && !isReplyToBot) {
-    return randomReply();
+  if (isBotTagged) {
+    const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
+    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
+    const random = filtered[Math.floor(Math.random() * filtered.length)];
+    return replyWithMention(random);
   }
 
-  // রিপ্লাই দিলে বা কথা বললে → SIM API
-  if (isReplyToBot || taggedBot || input) {
-    let ask = input;
-
-    // শুধু রিপ্লাই দিলে কিছু না লিখলে
-    if (isReplyToBot && (!message.body || message.body.trim() === "")) {
-      ask = "হুম বলো";
-    }
-
-    try {
-      const { data } = await axios.get(SIM_API_URL, {
-        params: { type: "ask", ask: ask || "হাই" },
-        timeout: 10000
-      });
-
-      if (data?.data?.msg) {
-        return send(data.data.msg);
-      }
-    } catch (e) {
-      console.log("SIM API Error:", e.message);
-      return send("একটু পরে বলিস, সার্ভার ঘুমাচ্ছে");
-    }
+  // HI or empty
+  if (askText.toLowerCase() === "hi" || askText === "") {
+    const data = JSON.parse(fs.readFileSync(LOCAL_CACHE, "utf-8"));
+    const filtered = data.filter(msg => typeof msg === "string" && !msg.startsWith("http"));
+    const random = filtered[Math.floor(Math.random() * filtered.length)];
+    return replyWithMention(random);
   }
 
-  return randomReply(); // ফাইনাল ফলব্যাক
+  // SIM API
+  try {
+    const res = await axios.get(SIM_API_URL, {
+      params: { type: "ask", ask: askText }
+    });
+
+    if (res.data?.data?.msg) {
+      return replyWithMention(res.data.data.msg);
+    }
+  } catch {
+    return message.reply("⚠️ API error. Try again.");
+  }
+
+  return message.reply("⚠️ Sorry, no reply found.");
 }
 
-export default { config, onCall };
+export default {
+  config,
+  onCall
+};
