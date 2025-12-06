@@ -6,7 +6,7 @@ const config = {
     cooldown: 3,
     permissions: [2],
     isAbsolute: true,
-    credits: "Aryan Rayhn",
+    credits: "Aryan Rayh",
     nixprefix: true,
     vip: false
 };
